@@ -1,26 +1,36 @@
 import * as functions from 'firebase-functions';
-import {getWavesData, day} from './format_data';
+import {getHighestWave, getChart, getHighestWaveEachDay} from './format_data';
 import {dialogflow, SimpleResponse, Image, BasicCard} from 'actions-on-google';
 
 const app = dialogflow({ debug: true });
 
 app.intent('how are the waves', async (conv) => {
     
-    const waves = await getWavesData();
+    const wave: string = await getHighestWave();
+    const chart: string = await getChart();
     
     conv.close(new SimpleResponse({
-        text: `The highest waves this week will be ${waves.highestWave.waveHeight} feet high on ${day[waves.highestWave.day]} at ${waves.highestWave.time}.`,
-        speech: `The highest waves this week will be ${waves.highestWave.waveHeight} feet high on ${day[waves.highestWave.day]} at ${waves.highestWave.time}.`
+        text: wave,
+        speech: wave
     }))
 
     conv.close(new BasicCard({
-        text: `The highest waves this week will be ${waves.highestWave.waveHeight} feet high on ${day[waves.highestWave.day]} at ${waves.highestWave.time}.`,
+        text: wave,
         image: new Image({
-            url: waves.chart,
+            url: chart,
             alt: 'BuzzardsView.com'
         })
     }))
 });
 
+app.intent('waves each day', async (conv) => {
+    const waves = await getHighestWaveEachDay();
+
+    conv.close(new SimpleResponse({
+        text: waves,
+        speech: waves
+    }));
+
+});
 
 export const fulfillment = functions.https.onRequest(app);

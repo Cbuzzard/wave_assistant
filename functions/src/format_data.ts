@@ -10,76 +10,71 @@ export enum day {
     Saturday
 }
 
-interface wavesData {
-    highestWave: highestWave,
-    todayWave: todayWave,
-    chart: string
+export async function getHighestWave(): Promise<string> {
+
+    const data: Array<myJson> = await getMaxWaves();
+    
+    const maxWave = data.reduce((prev: myJson, current: myJson) => (prev.swell.absMaxBreakingHeight > current.swell.absMaxBreakingHeight) ? prev : current);
+    
+    const response = `The highest waves this week will be 
+        ${maxWave.swell.absMaxBreakingHeight} feet high 
+        ${getDayString(maxWave.timestamp*1000)} at 
+        ${getTimeString(maxWave.timestamp*1000)}.`;
+
+    return response;
 }
 
-interface highestWave {
-    waveHeight: number,
-    day: day,
-    time: string
-}
+export async function getHighestWaveEachDay(): Promise<string> {
 
-interface todayWave {
-    waveHeight: number,
-    time: string
-}
-
-export async function getWavesData(): Promise<wavesData> {
     const data: Array<myJson> = await getMaxWaves();
 
-    const finalData = {
-        highestWave: getHighestWave(data),
-        todayWave: getTodayWave(data),
-        chart: getChart(data)
+    const highestWaveForEachDay = new Map();
+    
+    for (const d of data) {
+        const dayString: day = new Date(d.timestamp * 1000).getDay()
+        if (highestWaveForEachDay.get(dayString) < d.swell.absMaxBreakingHeight || !(highestWaveForEachDay.has(dayString))) {
+            highestWaveForEachDay.set(dayString, d);
+        }
+    }
+    
+    let response: string = "";
+    const highestWavesArray: Array<myJson> = [];
+
+    highestWaveForEachDay.forEach((value: myJson, key: day) => {
+        highestWavesArray.push(value)
+    });
+
+    highestWavesArray.sort((a, b) => (a.timestamp > b.timestamp) ? 1 : -1)
+
+    for (const wave of highestWavesArray) {
+        response += getDayString(wave.timestamp*1000) + " the waves will have a maxWave height of " + 
+        wave.swell.absMaxBreakingHeight + " feet at " + 
+        getTimeString(wave.timestamp*1000) + ". ";
     }
 
-    return finalData;
+    return response;
+
 }
 
-function getHighestWave(data: Array<myJson>): highestWave {
-    
-    //finds wave object with highest wave
-    const max = data.reduce((prev: myJson, current: myJson) => (prev.swell.absMaxBreakingHeight > current.swell.absMaxBreakingHeight) ? prev : current);
+export async function getTodayWave(): Promise<string> {
 
-    //date objecct to retrieve day index and get formated hour/time
-    const date = (): Date => {return new Date(max.timestamp * 1000)};
-    
-    const returnData: highestWave = {
-        waveHeight: max.swell.absMaxBreakingHeight,
-        day: date().getDay(),
-        time: date().toLocaleString('en-US', { hour: 'numeric', hour12: true })
-    }
-
-    return returnData;
-}
-
-function getTodayWave(data: Array<myJson>): todayWave {
-
-    const date = (timestamp: number) => {return new Date(timestamp * 1000)}
-    const today = new Date().getDay()
+    const data: Array<myJson> = await getMaxWaves();
 
     const allWavesToday: Array<myJson> = [];
 
-    for (let i = 0; date(data[i].timestamp).getDay() === today; i++) {
-        allWavesToday.push(data[i]);
-    }
+    for (let i = 0; getDayString(data[i].timestamp*1000) === 'today'; i++) { allWavesToday.push(data[i]); }
 
     const todayMax = allWavesToday.reduce((prev: myJson, current: myJson) => (prev.swell.absMaxBreakingHeight > current.swell.absMaxBreakingHeight) ? prev : current);
 
-    const returnData: todayWave = {
-        waveHeight: todayMax.swell.absMaxBreakingHeight,
-        time: date(todayMax.timestamp).toLocaleString('en-US', { hour: 'numeric', hour12: true })
-    }
+    const response = `The highest waves today will be ${todayMax.swell.absMaxBreakingHeight} at ${getTimeString(todayMax.timestamp*1000)}.`
 
-    return returnData;
+    return response;
 }
 
-function getChart(data: Array<myJson>): string {
+export async function getChart(): Promise<string> {
+
+    const data: Array<myJson> = await getMaxWaves();
     
-    //used to store all wave heights. used for formatting
     const waveHeightArray: Array<Array<number>> = [
         [],
         [],
@@ -90,8 +85,7 @@ function getChart(data: Array<myJson>): string {
         []
     ]
     
-    //populates the waveHeightArray
-    for (let item of data) {
+    for (const item of data) {
         const waveDay: day = new Date(item.timestamp * 1000).getDay();
         waveHeightArray[waveDay].push(item.swell.absMaxBreakingHeight);
     }
@@ -109,7 +103,6 @@ function getChart(data: Array<myJson>): string {
     ]
     let dayAxis: Array<day> | string = []
 
-    //handles pushing data from today to saturday
     for (let i = startIndex; i < waveHeightArray.length && !(waveHeightArray[i].length === 0); i++) {
         for (let j = 0; j < waveHeightArray[i].length; j++) {
             formatedData[j].push(waveHeightArray[i][j]);
@@ -117,7 +110,6 @@ function getChart(data: Array<myJson>): string {
         dayAxis.push(i);
     }
 
-    //handles all data not pushed by the for loop. will start at 0 and stop at an empty index
     for (let i = 0; i < waveHeightArray.length && !(waveHeightArray[i].length === 0); i++) {
         for (let j = 0; j < waveHeightArray[i].length; j++) {
             formatedData[j].push(waveHeightArray[i][j]);
@@ -125,8 +117,6 @@ function getChart(data: Array<myJson>): string {
         dayAxis.push(i);
     }
 
-    //chart api needs each piece of data to have commas between them so this array will store 
-    //each column group in "1,2,3,4" format.
     const stringData: Array<string> = [];
 
     for (const array of formatedData) {
@@ -137,4 +127,24 @@ function getChart(data: Array<myJson>): string {
     const finalDataString: string = `&chd=a:${stringData.join('|')}`;
     
     return `https://image-charts.com/chart?cht=bvg&chs=700x150&chxr=1,.5,5&chxt=x,y&chco=1869b7${dayAxis}${finalDataString}`
+}
+
+function getDayString(timestamp: number): string {
+    const today: Date = new Date();
+    today.setHours(today.getHours() - 2);
+    const waveDate: Date = new Date(timestamp);
+
+    if(today.getDay() === waveDate.getDay()) {
+        return "today";
+    }
+    
+    if(today.getDay()+1 === waveDate.getDay()) {
+        return "tommorow";
+    }
+
+    return day[waveDate.getDay()];
+}
+
+function getTimeString(timestamp: number): string {
+    return new Date(timestamp).toLocaleString('en-US', { hour: 'numeric', hour12: true })
 }
