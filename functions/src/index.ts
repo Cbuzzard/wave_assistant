@@ -1,5 +1,5 @@
 import * as functions from 'firebase-functions';
-import {getHighestWave, getChart, getHighestWaveEachDay} from './format_data';
+import {getHighestWave, getChart, getHighestWaveEachDay, getWavesOverThreeFeet} from './format_data';
 import {dialogflow, SimpleResponse, Image, BasicCard} from 'actions-on-google';
 
 const app = dialogflow({ debug: true });
@@ -25,6 +25,27 @@ app.intent('how are the waves', async (conv) => {
 
 app.intent('waves each day', async (conv) => {
     const waves = await getHighestWaveEachDay();
+
+    conv.close(new SimpleResponse({
+        text: waves,
+        speech: waves
+    }));
+
+});
+
+app.intent('best waves', async (conv) => {
+    const waves = await getWavesOverThreeFeet();
+
+    conv.close(new SimpleResponse({
+        text: waves,
+        speech: waves
+    }));
+
+});
+
+app.intent('best wave', async (conv
+    ) => {
+    const waves = await getHighestWave();
 
     conv.close(new SimpleResponse({
         text: waves,

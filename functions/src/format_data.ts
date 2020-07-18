@@ -56,6 +56,40 @@ export async function getHighestWaveEachDay(): Promise<string> {
 
 }
 
+export async function getWavesOverThreeFeet() {
+
+    const data: Array<myJson> = await getMaxWaves();
+
+    const highestWaveForEachDay = new Map();
+    
+    for (const d of data) {
+        const dayString: day = new Date(d.timestamp * 1000).getDay()
+        if (d.swell.absMaxBreakingHeight >= 3) {
+            if (highestWaveForEachDay.get(dayString) < d.swell.absMaxBreakingHeight || !(highestWaveForEachDay.has(dayString))) {
+                highestWaveForEachDay.set(dayString, d);
+            }
+        }
+    }
+
+    let response: string = "";
+    const highestWavesArray: Array<myJson> = [];
+
+    highestWaveForEachDay.forEach((value: myJson, key: day) => {
+        highestWavesArray.push(value)
+    });
+
+    highestWavesArray.sort((a, b) => (a.timestamp > b.timestamp) ? 1 : -1)
+
+    for (const wave of highestWavesArray) {
+        response += getDayString(wave.timestamp*1000) + " the waves will have a maxWave height of " + 
+        wave.swell.absMaxBreakingHeight + " feet at " + 
+        getTimeString(wave.timestamp*1000) + ". ";
+    }
+
+    return response;
+
+}
+
 export async function getTodayWave(): Promise<string> {
 
     const data: Array<myJson> = await getMaxWaves();
