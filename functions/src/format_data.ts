@@ -10,6 +10,16 @@ export enum day {
     Saturday
 }
 
+export async function getInitialResponse() {
+    const data: Array<myJson> = await getMaxWaves();
+    for (const d of data) {
+        if (d.swell.absMaxBreakingHeight >= 3) {
+            return "Looks like there will be some good waves this week. Would you like to know anything else?"
+        }
+    }
+    return "There aren't any good waves this week. would you like to know anything else?"
+}
+
 export async function getHighestWave(): Promise<string> {
 
     const data: Array<myJson> = await getMaxWaves();

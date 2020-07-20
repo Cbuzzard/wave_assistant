@@ -1,21 +1,20 @@
 import * as functions from 'firebase-functions';
-import {getHighestWave, getChart, getHighestWaveEachDay, getWavesOverThreeFeet} from './format_data';
+import {getHighestWave, getChart, getHighestWaveEachDay, getWavesOverThreeFeet, getInitialResponse} from './format_data';
 import {dialogflow, SimpleResponse, Image, BasicCard} from 'actions-on-google';
 
 const app = dialogflow({ debug: true });
 
 app.intent('how are the waves', async (conv) => {
     
-    const wave: string = await getHighestWave();
+    const response: string = await getInitialResponse();
     const chart: string = await getChart();
     
-    conv.close(new SimpleResponse({
-        text: wave,
-        speech: wave
+    conv.ask(new SimpleResponse({
+        text: response,
+        speech: response
     }))
 
-    conv.close(new BasicCard({
-        text: wave,
+    conv.ask(new BasicCard({
         image: new Image({
             url: chart,
             alt: 'BuzzardsView.com'
