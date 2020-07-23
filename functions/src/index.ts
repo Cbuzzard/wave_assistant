@@ -1,5 +1,5 @@
 import * as functions from 'firebase-functions';
-import {getHighestWave, getChart, getHighestWaveEachDay, getWavesOverThreeFeet, getInitialResponse, getTodayWave} from './format_data';
+import {getHighestWaveResponse, getChartUrl, getHighestWaveEachDayResponse, getWavesOverThreeFeetResponse, getInitialResponse, getTodayWaveResponse} from './format_data';
 import {dialogflow, SimpleResponse, Image, BasicCard} from 'actions-on-google';
 
 const app = dialogflow({ debug: true });
@@ -7,7 +7,7 @@ const app = dialogflow({ debug: true });
 app.intent('how are the waves', async (conv) => {
     
     const response: string = await getInitialResponse();
-    const chart: string = await getChart();
+    const chart: string = await getChartUrl();
     
     conv.ask(new SimpleResponse({
         text: response,
@@ -23,7 +23,7 @@ app.intent('how are the waves', async (conv) => {
 });
 
 app.intent('waves each day', async (conv) => {
-    const waves = await getHighestWaveEachDay();
+    const waves = await getHighestWaveEachDayResponse();
 
     conv.close(new SimpleResponse({
         text: waves,
@@ -33,7 +33,7 @@ app.intent('waves each day', async (conv) => {
 });
 
 app.intent('best waves', async (conv) => {
-    const waves = await getWavesOverThreeFeet();
+    const waves = await getWavesOverThreeFeetResponse();
 
     conv.close(new SimpleResponse({
         text: waves,
@@ -44,7 +44,7 @@ app.intent('best waves', async (conv) => {
 
 app.intent('best wave', async (conv
     ) => {
-    const waves = await getHighestWave();
+    const waves = await getHighestWaveResponse();
 
     conv.close(new SimpleResponse({
         text: waves,
@@ -55,7 +55,7 @@ app.intent('best wave', async (conv
 
 app.intent('waves today', async (conv
     ) => {
-    const waves = await getTodayWave();
+    const waves = await getTodayWaveResponse();
 
     conv.close(new SimpleResponse({
         text: waves,

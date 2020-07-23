@@ -1,4 +1,4 @@
-import {getMaxWaves, myJson} from './api_fetch'
+import {getMaxWaves, wave} from './api_fetch'
 
 export enum day {
     Sunday,
@@ -11,7 +11,7 @@ export enum day {
 }
 
 export async function getInitialResponse() {
-    const data: Array<myJson> = await getMaxWaves();
+    const data: Array<wave> = await getMaxWaves();
     for (const d of data) {
         if (d.swell.absMaxBreakingHeight >= 3) {
             return "Looks like there will be some good waves this week. Would you like to know anything else?"
@@ -20,11 +20,11 @@ export async function getInitialResponse() {
     return "There aren't any good waves this week. would you like to know anything else?"
 }
 
-export async function getHighestWave(): Promise<string> {
+export async function getHighestWaveResponse(): Promise<string> {
 
-    const data: Array<myJson> = await getMaxWaves();
+    const highestWavesArray: Array<wave> = await getHighestWaveEachDay();
     
-    const maxWave = data.reduce((prev: myJson, current: myJson) => (prev.swell.absMaxBreakingHeight > current.swell.absMaxBreakingHeight) ? prev : current);
+    const maxWave = highestWavesArray.reduce((prev: wave, current: wave) => (prev.swell.absMaxBreakingHeight > current.swell.absMaxBreakingHeight) ? prev : current);
     
     const response = `The highest waves this week will be 
         ${maxWave.swell.absMaxBreakingHeight} feet high 
@@ -34,90 +34,52 @@ export async function getHighestWave(): Promise<string> {
     return response;
 }
 
-export async function getHighestWaveEachDay(): Promise<string> {
+export async function getHighestWaveEachDayResponse(): Promise<string> {
 
-    const data: Array<myJson> = await getMaxWaves();
+    const highestWavesArray: Array<wave> = await getHighestWaveEachDay();
 
-    const highestWaveForEachDay = new Map();
-    
-    for (const d of data) {
-        const dayString: day = new Date(d.timestamp * 1000).getDay()
-        if (highestWaveForEachDay.get(dayString) < d.swell.absMaxBreakingHeight || !(highestWaveForEachDay.has(dayString))) {
-            highestWaveForEachDay.set(dayString, d);
-        }
-    }
-    
-    let response: string = "";
-    const highestWavesArray: Array<myJson> = [];
+    let response = ""
 
-    highestWaveForEachDay.forEach((value: myJson, key: day) => {
-        highestWavesArray.push(value)
-    });
-
-    highestWavesArray.sort((a, b) => (a.timestamp > b.timestamp) ? 1 : -1)
-
-    for (const wave of highestWavesArray) {
+    highestWavesArray.forEach(wave => {
         response += getDayString(wave.timestamp*1000) + " the waves will have a maxWave height of " + 
         wave.swell.absMaxBreakingHeight + " feet at " + 
-        getTimeString(wave.timestamp*1000) + ". ";
-    }
+        getTimeString(wave.timestamp*1000) + ". "
+    })
 
     return response;
-
 }
 
-export async function getWavesOverThreeFeet() {
+export async function getWavesOverThreeFeetResponse() {
 
-    const data: Array<myJson> = await getMaxWaves();
+    const highestWavesArray: Array<wave> = await getHighestWaveEachDay();
 
-    const highestWaveForEachDay = new Map();
-    
-    for (const d of data) {
-        const dayString: day = new Date(d.timestamp * 1000).getDay()
-        if (d.swell.absMaxBreakingHeight >= 3) {
-            if (highestWaveForEachDay.get(dayString) < d.swell.absMaxBreakingHeight || !(highestWaveForEachDay.has(dayString))) {
-                highestWaveForEachDay.set(dayString, d);
-            }
+    let response = ""
+
+    for (const wave of highestWavesArray) {
+        if (wave.swell.absMaxBreakingHeight >= 3) {
+            response += getDayString(wave.timestamp*1000) + " the waves will have a maxWave height of " + 
+            wave.swell.absMaxBreakingHeight + " feet at " + 
+            getTimeString(wave.timestamp*1000) + ". ";
         }
     }
 
-    let response: string = "";
-    const highestWavesArray: Array<myJson> = [];
-
-    highestWaveForEachDay.forEach((value: myJson, key: day) => {
-        highestWavesArray.push(value)
-    });
-
-    highestWavesArray.sort((a, b) => (a.timestamp > b.timestamp) ? 1 : -1)
-
-    for (const wave of highestWavesArray) {
-        response += getDayString(wave.timestamp*1000) + " the waves will have a maxWave height of " + 
-        wave.swell.absMaxBreakingHeight + " feet at " + 
-        getTimeString(wave.timestamp*1000) + ". ";
-    }
-
     return response;
-
 }
 
-export async function getTodayWave(): Promise<string> {
+export async function getTodayWaveResponse(): Promise<string> {
 
-    const data: Array<myJson> = await getMaxWaves();
+    const highestWavesArray: Array<wave> = await getHighestWaveEachDay();
 
-    const allWavesToday: Array<myJson> = [];
+    const todayWave = highestWavesArray[0];
 
-    for (let i = 0; getDayString(data[i].timestamp*1000) === 'today'; i++) { allWavesToday.push(data[i]); }
-
-    const todayMax = allWavesToday.reduce((prev: myJson, current: myJson) => (prev.swell.absMaxBreakingHeight > current.swell.absMaxBreakingHeight) ? prev : current);
-
-    const response = `The highest waves today will be ${todayMax.swell.absMaxBreakingHeight} at ${getTimeString(todayMax.timestamp*1000)}.`
+    const response = `The highest waves today will be ${todayWave.swell.absMaxBreakingHeight} at ${getTimeString(todayWave.timestamp*1000)}.`
 
     return response;
 }
 
-export async function getChart(): Promise<string> {
+export async function getChartUrl(): Promise<string> {
 
-    const data: Array<myJson> = await getMaxWaves();
+    const data: Array<wave> = await getMaxWaves();
     
     const waveHeightArray: Array<Array<number>> = [
         [],
@@ -171,6 +133,18 @@ export async function getChart(): Promise<string> {
     const finalDataString: string = `&chd=a:${stringData.join('|')}`;
     
     return `https://image-charts.com/chart?cht=bvg&chs=700x150&chxr=1,.5,5&chxt=x,y&chco=1869b7${dayAxis}${finalDataString}`
+}
+
+async function getHighestWaveEachDay(): Promise<Array<wave>> {
+    const data: Array<wave> = await getMaxWaves();
+
+    data.sort((a, b) => (a.swell.absMaxBreakingHeight > b.swell.absMaxBreakingHeight) ? 1 : -1)
+
+    let highestWavesObject = Object.assign({}, ...data.map(wave => ({[getDayString(wave.timestamp*1000)]: wave})))
+
+    const highestWavesArray: Array<wave> = Object.values(highestWavesObject)
+
+    return highestWavesArray.sort((a, b) => (a.timestamp > b.timestamp) ? 1 : -1)
 }
 
 function getDayString(timestamp: number): string {
