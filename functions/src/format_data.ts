@@ -77,63 +77,37 @@ export async function getTodayWaveResponse(): Promise<string> {
     return response;
 }
 
-export async function getChartUrl(): Promise<string> {
-
+export async function getChartUrl() {
     const data: Array<wave> = await getMaxWaves();
+
+    data.sort((a, b) => (new Date(a.timestamp*1000).getHours())>=new Date(b.timestamp*1000).getHours() ? 1:-1)
+
+    let dataLabels = `&chxl=0:|`;
+    for(let i = 0; i < 5; i++) dataLabels+=`${getDayString(data[i].timestamp*1000)}|`
+    let dataString: string = '&chd=a:'
+
+    dataString += data.reduce((acc: Array<Array<wave>>, curr) => {
+        if (acc[0].length === 0) return acc = [[curr]]
+        if (new Date(curr.timestamp*1000).getHours() != new Date(acc[acc.length-1][0].timestamp*1000).getHours()) acc.push([])
+        acc[acc.length-1].push(curr)
+        return acc
+    }, [[]]).map(waveArr => waveArr.map(wave => wave.swell.absMaxBreakingHeight)).join('|')
     
-    const waveHeightArray: Array<Array<number>> = [
-        [],
-        [],
-        [],
-        [],
-        [],
-        [],
-        []
-    ]
-    
-    for (const item of data) {
-        const waveDay: day = new Date(item.timestamp * 1000).getDay();
-        waveHeightArray[waveDay].push(item.swell.absMaxBreakingHeight);
-    }
-
-    const startIndex: number = new Date().getDay();
-    const formatedData: Array<Array<number>> = [
-        [],
-        [],
-        [],
-        [],
-        [],
-        [],
-        [],
-        []
-    ]
-    let dayAxis: Array<day> | string = []
-
-    for (let i = startIndex; i < waveHeightArray.length && !(waveHeightArray[i].length === 0); i++) {
-        for (let j = 0; j < waveHeightArray[i].length; j++) {
-            formatedData[j].push(waveHeightArray[i][j]);
-        }
-        dayAxis.push(i);
-    }
-
-    for (let i = 0; i < waveHeightArray.length && !(waveHeightArray[i].length === 0); i++) {
-        for (let j = 0; j < waveHeightArray[i].length; j++) {
-            formatedData[j].push(waveHeightArray[i][j]);
-        }
-        dayAxis.push(i);
-    }
-
-    const stringData: Array<string> = [];
-
-    for (const array of formatedData) {
-        stringData.push(array.join(','));
-    }
-
-    dayAxis = `&chxl=0:|${dayAxis.join('|')}`;
-    const finalDataString: string = `&chd=a:${stringData.join('|')}`;
-    
-    return `https://image-charts.com/chart?cht=bvg&chs=700x150&chxr=1,.5,5&chxt=x,y&chco=1869b7${dayAxis}${finalDataString}`
+    return `https://image-charts.com/chart?cht=bvg&chs=700x150&chxr=1,.5,5&chxt=x,y&chco=1869b7${dataLabels}${dataString}`
 }
+
+export async function getChartHighestWaveEachDayUrl() {
+    const highestWavesArray: Array<wave> = await getHighestWaveEachDay();
+    let dataString = `&chd=a:`;
+    let dataLabels = `&chxl=0:|`;
+    highestWavesArray.forEach(wave => {
+        dataString+= `${wave.swell.absMaxBreakingHeight},`
+        dataLabels+= `${getDayString(wave.timestamp*1000)}|`
+    })
+    return `https://image-charts.com/chart?cht=bvg&chs=700x150&chxr=1,.5,5&chxt=x,y&chco=1869b7${dataLabels}${dataString}`
+}
+
+
 
 async function getHighestWaveEachDay(): Promise<Array<wave>> {
     const data: Array<wave> = await getMaxWaves();
