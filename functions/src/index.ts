@@ -12,7 +12,7 @@ app.intent('how are the waves', async (conv) => {
     conv.ask(new SimpleResponse({
         text: response,
         speech: response
-    }))
+    }));
 
     conv.ask(new BasicCard({
         image: new Image({
