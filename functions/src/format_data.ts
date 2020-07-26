@@ -95,7 +95,7 @@ export function chartUrl(waveArray: Array<waveObject>): string {
 
     dataString += waveArray.reduce((acc: Array<Array<waveObject>>, curr) => {
         if (acc[0].length === 0) return acc = [[curr]];
-        if (new Date(curr.timestamp*1000).getHours() != new Date(acc[acc.length-1][0].timestamp*1000).getHours()) acc.push([]);
+        if (new Date(curr.timestamp*1000).getHours() !== new Date(acc[acc.length-1][0].timestamp*1000).getHours()) acc.push([]);
         acc[acc.length-1].push(curr);
         return acc;
     }, [[]]).map(waveArr => waveArr.map(wave => wave.swell.absMaxBreakingHeight)).join('|');
