@@ -20,3 +20,7 @@ Used to get upcoming wave data through google assistant. Uses DialogFlow for con
 * firebase login
 * Feed magicseaweed api key to functions/src/api_fetch
 * firebase deploy --only functions
+
+## To-Do
+
+* learn how to incorporate dialogflow into web app 
