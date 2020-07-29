@@ -1,6 +1,6 @@
 import {getMaxWaves, waveObject} from './api_fetch'
 
-export enum day {
+export enum dayString {
     Sunday,
     Monday, 
     Tuesday,
@@ -143,7 +143,7 @@ export function getDayString(timestamp: number): string {
         return "tommorow";
     }
 
-    return day[waveDate.getDay()];
+    return dayString[waveDate.getDay()];
 }
 
 export function getTimeString(timestamp: number): string {
