@@ -78,6 +78,7 @@ export function wavesOverThreeFeetResponse(waveArray: Array<waveObject>) {
             getTimeString(wave.timestamp*1000) + ". ";
         }
     }
+    if (response.length === 0) response = "There arent any good waves this week."
     return response;
 }
 
