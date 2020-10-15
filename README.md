@@ -23,4 +23,4 @@ Used to get upcoming wave data through google assistant. Uses DialogFlow for con
 
 ## To-Do
 
-* learn how to incorporate dialogflow into web app 
+* add responses for specific days
