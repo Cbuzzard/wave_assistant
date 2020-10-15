@@ -83,7 +83,7 @@ describe("highestWaveEachDayResponse", () => {
 
     const waveArray2: Array<waveObject>  =[{"timestamp":1594526400,"swell":{"absMaxBreakingHeight":5}}, {"timestamp":1594612800,"swell":{"absMaxBreakingHeight":3}}, {"timestamp":1594612800,"swell":{"absMaxBreakingHeight":4}}];
     it("should not eliminate any waves from given array", () => {
-        expect(format.highestWaveEachDayResponse(waveArray2) === "Sunday the waves will have a max height of 5 feet at 12 AM. Monday the waves will have a max height of 3 feet at 12 AM. ").toBeFalse()
+        expect(format.highestWaveEachDayResponse(waveArray2) === "Sunday the waves will have a max height of 5 feet at 12 AM. Monday the waves will have a max height of 3 feet at 12 AM. ").toBeFalsy()
     })
 })
 
